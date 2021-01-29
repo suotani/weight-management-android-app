@@ -1,29 +1,32 @@
 package com.example.hellotestapp
 
+import android.content.Context
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import io.realm.Realm
+import io.realm.RealmConfiguration
+import io.realm.Sort
 import kotlinx.android.synthetic.main.activity_main.*
-import java.lang.Float.valueOf
-import java.time.LocalDateTime
 import java.util.*
+import kotlin.properties.Delegates
+
 
 class MainActivity : AppCompatActivity() {
 
     lateinit var realm : Realm
+    var weight by Delegates.notNull<Float>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        var weight = 80.0F
-        var pWeight = weight
-        setCurrentWeight(weight)
-        preWeight.text = (String.format("%.01f", weight))
 
         toGraph.setOnClickListener{
+            val intent = Intent(this@MainActivity, GraphActivity::class.java)
+            startActivity(intent)
+        }
+        toList.setOnClickListener{
             val intent = Intent(this@MainActivity, SubActivity1::class.java)
             startActivity(intent)
         }
@@ -53,6 +56,16 @@ class MainActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         realm = Realm.getDefaultInstance()
+
+        val lastData = realm.where(WeightDB::class.java).sort("createdAt", Sort.DESCENDING).findFirst()
+        if (lastData != null) {
+            weight = lastData.weight
+        }else{
+            weight = 0.0F
+        }
+        setCurrentWeight(weight)
+        preWeight.text = (String.format("%.01f", weight))
+
     }
 
     override fun onPause() {
